@@ -87,8 +87,12 @@ function _es_replaceAll(source,s1,s2) {
     return !isNaN(val);
 }
 
-function _es_getvar(code) {
-    var yusuanfu="=+-*/%(){} ";
+function _es_getvar(codestr) {
+   var code=codestr;
+    code=code.replace(/\"\S*\"/g, "");
+    code=code.replace(/\'\S*\'/g, "");
+
+    var yusuanfu="=+-*/%(){} <>\"'";
     var arr=new Array();
     var bl="";
     for (var i=0;i<code.length;i++){
@@ -98,7 +102,7 @@ function _es_getvar(code) {
         else {
             if(bl!="")
             {
-                if(!_es_isnumber(bl)) {
+                if(!_es_isnumber(bl[0])) {
 
                     arr.push(bl);
                 }
@@ -109,7 +113,7 @@ function _es_getvar(code) {
     if(bl!="")
     {
 
-        if(!_es_isnumber(bl)) {
+        if(!_es_isnumber(bl[0])) {
 
             arr.push(bl);
         }
@@ -118,7 +122,33 @@ function _es_getvar(code) {
 
     return arr;
 }
+function _es_arrayadditme(array,item) {
+    var you=false;
+    for(var i in array){
+        if(array[i]==item){
+            you=true;
+            break;
+        }
+    }
+    if(!you){
 
+        array.push(item);
+    }
+}
+function  ESArrayToObjects(array) {
+    var obj={};
+    for(var i=0;i<array.length;i++){
+        var _obj=array[i];
+        var _lx=_es_typeof(_obj);
+        if(_lx!="array"){
+            obj[i]=_obj;
+        }
+        else {
+            obj[i]=new ESArrayToObjects(_obj);
+        }
+    }
+    return obj;
+}
 if (!Object.prototype.watch) {
     Object.defineProperty(Object.prototype, "watch", {
         enumerable: false
@@ -131,11 +161,12 @@ if (!Object.prototype.watch) {
                 , getter = function () {
                     return newval;
                 }
+                ,dx=this
                 , setter = function (val) {
                     oldval = newval;
                     newval=val;
 
-                    return newval = handler.call(this, prop, oldval, val);
+                    return newval=handler.call(dx, prop, oldval, val);
                 }
             ;
 
@@ -164,7 +195,18 @@ if (!Object.prototype.unwatch) {
         }
     });
 }
+function  _es_ESOBJ(obj,name,fullname,vmnodes,venodes,vpnodes) {
+    this.obj=obj;
+    this.name=name;
+    this.fullname=fullname;
+    this.nodes=vmnodes;
+    this.venode=venodes;
+    this.vpnodes=vpnodes;
+    this.changevalue=function (sx,value) {
+        this[sx]=value;
+    }
 
+}
 var _es_objects=new ESArray();
 function  ESArray() {
     this.objects=new Array();
@@ -174,10 +216,12 @@ function  ESArray() {
             if(fullp==""){
                 fullp=p;
             }
-            this.objects.push({obj:dx,name:p,fullname:fullp,nodes:new Array()});
+          //  this.objects.push({obj:dx,name:p,fullname:fullp,nodes:new Array(),venodes:new Array(),vpnodes:new Array()});
+           this.objects.push(new _es_ESOBJ(dx,p,fullp,new Array(),new Array(),new Array()))
             if(lx=="array"){
                 for(var pp in dx){
-                    this.objects.push({obj:dx[pp],name:p,fullname:fullp+"["+pp+"]",nodes:new Array()});
+                    this.objects.push(new _es_ESOBJ(dx[pp],p,fullp+"["+pp+"]",new Array(),new Array(),new Array()))
+                   // this.objects.push({obj:dx[pp],name:p,fullname:fullp+"["+pp+"]",nodes:new Array(),venodes:new Array(),vpnodes:new Array()});
                 }
             }
 
@@ -203,15 +247,7 @@ function  ESArray() {
         }
         return  null;
     }
-    this.delete=function (dx) {
-        for (var i=0;i<this.objects.length;i++){
-            if(this.objects[i].obj==dx){
-                this.objects.splice(i,1);
-                break;
-            }
-        }
 
-    }
     this.setnodesvalue=function(esobj,value){
         for (var p in esobj.nodes){
             var node=esobj.nodes[p];
@@ -263,6 +299,9 @@ function _es_eval(code){
 }
 
 //dom
+function  _es_setnodestyle(node,style) {
+    
+}
 function  _es_addevent(node,sj,fn,obj) {
     node.addEventListener(sj,function () {fn(this,obj);
 
@@ -273,7 +312,10 @@ function  _es_htmltonode(innerhtml,tagname) {
     node.innerHTML=innerhtml;
     return node;
 }
-function _es_setAttr(node,attr,value,cunzai=true){
+function _es_setAttr(node,attr,value,cunzai){
+    if(typeof (cunzai)=="undefined"){
+        cunzai=true;
+    }
     if(cunzai){
         var val=node.getAttribute(attr);
         if(typeof(val)=="undefined"||val==null){
@@ -331,9 +373,10 @@ function _es_getnodesbypros(pros,pnodes){
             for (var i = 0; i < cs.length; i++) {
                 var _nodes = pnodes[m].querySelectorAll(cs[i]);
 
-                for (var m = 0; m < _nodes.length; m++) {
+                 for (var m = 0; m < _nodes.length; m++) {
                     var _n = _nodes[m];
-                    var you = false;
+                     _es_arrayadditme(nodes,_n);
+                   /* var you = false;
                     for (var n = 0; n < nodes.length; n++) {
                         if (nodes[n] == _n) {
                             you = true;
@@ -342,7 +385,7 @@ function _es_getnodesbypros(pros,pnodes){
                     }
                     if (!you) {
                         nodes.push(_n);
-                    }
+                    }*/
 
                 }
 
@@ -357,7 +400,8 @@ function _es_getnodesbypros(pros,pnodes){
 
             for (var m = 0; m < _nodes.length; m++) {
                 var _n = _nodes[m];
-                var you = false;
+                _es_arrayadditme(nodes,_n);
+                /*var you = false;
                 for (var n = 0; n < nodes.length; n++) {
                     if (nodes[n] == _n) {
                         you = true;
@@ -366,7 +410,7 @@ function _es_getnodesbypros(pros,pnodes){
                 }
                 if (!you) {
                     nodes.push(_n);
-                }
+                }*/
 
             }
 
@@ -393,6 +437,19 @@ function _es_getAttr(node,attr){
 function  _es_setnodevalue(node,value) {
     if(node!=null){
         var vtype=_es_typeof(value);
+        if(vtype=="object"){
+            var valuestr="";
+            for(var p in value){
+                if(_es_typeof(value[p])=="function"){
+                    continue;
+                }
+                if(valuestr!=""){
+                    valuestr+="、";
+                }
+                valuestr+=value[p];
+            }
+            value=valuestr;
+        }
         var tagname=node.tagName.toLowerCase();
         if(tagname=="span"||tagname=="p"||tagname=="div"||tagname=="a"){
             node.innerText=value;
@@ -476,6 +533,27 @@ function _es_debug(str,jibie) {
     }
     console.log(str);
 }
+function _es_arraytobojects(obj) {
+
+     for (var p in obj){
+         var _obj=obj[p];
+        var lx=_es_typeof(_obj);
+        if(lx=="array"){
+            var dx=new ESArrayToObjects(_obj);
+           obj[p]=dx;
+           dx["changevalue"]=function (sx,value) {
+               this[sx]=value;
+           }
+            Object.defineProperty(dx, "changevalue", {
+                enumerable: false
+            });
+        }
+        else if(lx=="object"){
+            _es_arraytobojects(_obj);
+        }
+     }
+
+}
 
 function _es_prevdodata(options,pobject,pname) {
     if(arguments.length==1){
@@ -489,17 +567,26 @@ function _es_prevdodata(options,pobject,pname) {
     var fname=pname;
 
 
-  for (var p in options){
+    for (var p in options){
         var dx=options[p];
         var lx=_es_typeof(dx);
+        if(lx=="array"){
+            dx=new ESArrayToObjects(dx);
+        }
         if(lx=="object"){
-            console.log(p);
+
             if(pname=="") {
                 fname = p;
 
             }
             else{
-                fname=pname+"."+p;
+                if(_es_isnumber(p)){
+                    fname=pname+"["+p+"]";
+                }
+                else {
+                    fname=pname+"."+p;
+                }
+
             }
 
             _es_prevdodata(dx,dx,fname);
@@ -507,16 +594,22 @@ function _es_prevdodata(options,pobject,pname) {
 
         }
         else if(pname!=""){
-            fname=pname+"."+p;
+            if(_es_isnumber(p)){
+                fname=pname+"["+p+"]";
+            }
+            else {
+                fname=pname+"."+p;
+            }
         }
-         pobject[p] = dx;
+        pobject[p] = dx;
         if(lx!="function") {
             _es_objects.add(dx,p,fname);
-           // _es_nodes.push({obj: dx, name: p, fullname: fname, nodes: new Array()});
+            // _es_nodes.push({obj: dx, name: p, fullname: fname, nodes: new Array()});
         }
-  }
+    }
 }
 //render
+
 function _es_render_vc(esnode,first) {
     var attrobj = _es_getAttr(esnode.node, "vc");
     if(attrobj.valid){
@@ -529,8 +622,8 @@ function _es_render_vc(esnode,first) {
 
                 var _subnodes= _es_getchildnodes(esnode.node);
                 var _html=esnode.node.innerHTML;
-                var len=evalobj.value.length;
-                if(len>0) {
+
+                if(evalobj.value) {
                     var _obj=evalobj.value[0];
                     for (var p in _obj) {
                         _html = _html.replaceAll( "." + p, incode.fobj + "[@no]." + p);
@@ -539,7 +632,7 @@ function _es_render_vc(esnode,first) {
                _es_removechildnodes(esnode.node);
 
 
-               for (var i=0;i<len;i++)
+               for (var i in evalobj.value)
                {
                  var html=_html.replaceAll("@no",i);
 
@@ -586,9 +679,7 @@ function _es_render_vc(esnode,first) {
 
     }
 }
-function _es_render_vmvevps(nodes,obj) {
 
-}
 //对象
 function ESNode(node) {
     this.node=node;
@@ -596,11 +687,13 @@ function ESNode(node) {
 
 }
 function ESVM(options) {
+    _es_arraytobojects(options);
   this.options=options;
   this._init=function () {
 
 
   }
+  
   this._es_render_vm=function (node,first) {
       var vmpobj=_es_getAttr(node,"vm");
       if(vmpobj.valid){
@@ -613,26 +706,43 @@ function ESVM(options) {
 
 
                   _es_addevent(node,"change",function (obj,pvv) {
-                      _es_evalsetvalue(pvv,obj.value);
+                      var _value=obj.value;
+                      var _typenode=_es_getAttr(obj,"type");
+
+                      if(_typenode.value=="radio"||_typenode.value=="checkbox"){
+                         if(!node.checked){
+                             _value="";
+                         }
+                      }
+                      var provm=_es_getAttr(obj,"vm");
+                      if(provm.valid){
+                          var __esobject=_es_objects.findbyfullname(provm.value);
+                          if(__esobject){
+                              __esobject.obj=_value;
+                          }
+                      }
+                      _es_evalsetvalue(pvv,_value);
 
                   },vmpobj.value);
               }
               var zhi=vmpobj.value;
 
-              if(zhi.endWith("]")){
+            /*  if(zhi.endWith("]")){
                   var ps=zhi.lastIndexOf("[");
                   if(ps>-1) {
                       zhi = zhi.substr(0, ps);
                   }
-              }
+              }*/
               var _esobject=_es_objects.findbyfullname(zhi);
               if(_esobject&&first){
-                  _esobject.nodes.push(node);
+                  _es_arrayadditme(_esobject.nodes,node);
+                 // _esobject.nodes.push(node);
               }
               _es_setnodevalue(node,pv.value);
               var _esobject=_es_objects.findbyfullname(vmpobj.value);
               if(_esobject&&first){
-                  _esobject.nodes.push(node);
+                  _es_arrayadditme(_esobject.nodes,node);
+                  //_esobject.nodes.push(node);
               }
           }
 
@@ -660,7 +770,7 @@ function ESVM(options) {
       }
   }
   this._es_render_vps=function(nodes,first){
-      console.log(nodes);
+
       for(var i=0;i<nodes.length;i++){
           this._es_render_vp(nodes[i],first);
       }
@@ -670,6 +780,7 @@ function ESVM(options) {
           first=true;
       }
       var vpobj=_es_getAttr(node,"vp");
+
       if(vpobj.valid){
 
           var provalue=vpobj.value;
@@ -682,12 +793,16 @@ function ESVM(options) {
               var bls=_es_getvar(cs[2]);
               for (var i=0;i<bls.length;i++){
                   var fullname=bls[i];
+
                  var _esobj= _es_objects.findbyfullname(fullname);
                   if(_esobj&&first){
-                      _esobj.nodes.push(node);
+                       _es_arrayadditme(_esobj.vpnodes,node);
+
+                     // _esobj.nodes.push(node);
                   }
               }
             if(proobj.valid&&proobj.value) {
+
                 if (proname == "style") {
                     node.style = node.style.cssText + provalue;
 
@@ -699,7 +814,7 @@ function ESVM(options) {
             else{
 
                 node.style = node.style.cssText.replace(provalue,"");
-                console.log(node.style.cssText);
+
             }
           }
           else{
@@ -738,53 +853,45 @@ function ESVM(options) {
 
             var lx = _es_typeof(subobj);
 
-            if(lx=="string"||lx=="number"||lx=="boolean"||lx=="array"){
+            if(lx=="string"||lx=="number"||lx=="boolean"){
 
                 obj.watch(p, function (id, oldval, newval) {
 
                     if(oldval!=newval) {
+
                         var _lx = _es_typeof (this);
+
                         var _zhilx=_es_typeof(this[id]);
                         var _esobj=null;
                         if(this==window){
                             _esobj=_es_objects.findbyfullname(id);
                         }
-                        else  if(_zhilx=="array"){
-                            _esobj=_es_objects.findbyobj(this);
 
-                            //数组重新赋值
-                            for(var pp in oldval){
-                                var _esobj2=_es_objects.findbyfullname(_esobj.fullname+"."+id+"["+pp+"]");
-                                _es_objects.setnodesvalue(_esobj2,newval[pp]);
-                                //
-                               // this._es_render_vp(_esobj2.nodes,false);
-                            }
-                        }
-                        else if(_lx=="array"){
-
-
-                            _esobj=_es_objects.findbyobj(this);
-
-                            _esobj=_es_objects.findbyfullname(_esobj.fullname+"["+id+"]");
-
-
-                        }
                         else{
                             _esobj=_es_objects.findbyobj(this);
                         }
                         if(_lx=="object"&&_esobj){
+                            if(_es_isnumber(id)){
+                             var  _pesobj=   _es_objects.findbyfullname(_esobj.fullname);
+                                if(_pesobj){
+                                    dx._es_render_vps(_pesobj.nodes,false);
+                                    for (var i=0;i<_pesobj.nodes.length;i++){
+                                        var node=_pesobj.nodes[i];
+                                        _pesobj.obj.changevalue(id,newval);
+                                       // _es_render_vmvevps(node,false);
+                                         _es_setnodevalue(node,_pesobj.obj);
+                                    }
+                                }
+                                _esobj=_es_objects.findbyfullname(_esobj.fullname+"["+id+"]");
+                            }
+                            else{
+                                _esobj=_es_objects.findbyfullname(_esobj.fullname+"."+id);
+                            }
 
-                            _esobj=_es_objects.findbyfullname(_esobj.fullname+"."+id);
 
                         }
 
-                        var _slx=_es_typeof(this[id]);
 
-                        if(_slx!="object"&&_esobj){
-
-                            _esobj.obj=newval;
-
-                        }
 
 
 
@@ -793,7 +900,13 @@ function ESVM(options) {
                             dx._es_render_vps(_esobj.nodes,false);
                             for (var i=0;i<_esobj.nodes.length;i++){
                                 var node=_esobj.nodes[i];
-                                _es_setnodevalue(node,newval);
+                                //_es_render_vmvevps(node,false);
+                               _es_setnodevalue(node,newval);
+                            }
+
+                            for (var i=0;i<_esobj.vpnodes.length;i++){
+                                var node=_esobj.vpnodes[i];
+                                dx._es_render_vp(node,false);
                             }
                         }
 

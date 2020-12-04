@@ -1,19 +1,28 @@
-function toolboxbianliobj(obj,pobj,treedom){
-  
+function toolboxbianliobj(obj,pobj,treedom,jibie){
+    var jb=jibie;
+    var jbstr="";
+    for(var m=0;m<jb;m++){
+        jbstr+="--";
+    }
     for(var p in obj){
-         
-      
+
         var _obj=pobj[p];
         var lx=_es_typeof(_obj);
+        if(lx=="function"){
+            continue;
+        }
         var dv = document.createElement('div');
-        dv.innerHTML='<div>'+p+'['+lx+']</div>';
+        dv.innerHTML='<div>'+jbstr+p+'['+lx+'] <span>显隐</span><span>表单</span></div>';
         treedom.append(dv);
          if(lx=="object"){
-             toolboxbianliobj(_obj,_obj,dv);
+             toolboxbianliobj(_obj,_obj,dv,++jb);
         } else if(lx!="function") {
-             var sdv = document.createElement('div');
-             sdv.innerHTML='<div>'+_obj+'</div>';
-             dv.append(sdv);
+             if(lx!="array") {
+                 var sdv = document.createElement('div');
+                 sdv.innerHTML = '<div>' + _obj + '</div>';
+               //  dv.append(sdv);
+             }
+
          }
 
     }
@@ -21,18 +30,22 @@ function toolboxbianliobj(obj,pobj,treedom){
 function moveotoolbox() {
 
     var dv = document.createElement('div');
-    dv.style="border:1px solid #ccc;background-color:#ffffff;width:150px;height:400px;position:absolute;top:10px;right:10px; overflow:auto;";
-    dv.innerHTML='<div id="toolboxclosebtn" style="background-color: #ccc;height:20px; text-align: right; padding-right: 10px;"><span title="关闭" style="cursor:pointer;">X</span></div><div id="toolboxtree"></div>';
+    dv.style="border:1px solid #ccc;background-color:#ffffff;width:250px;height:400px;position:absolute;top:10px;right:10px; overflow:auto;";
+    dv.innerHTML='<div  style="background-color: #ccc;height:20px; text-align: right; padding-right: 10px;"><span id="toolboxclosebtn" title="关闭" style="cursor:pointer;">X</span></div><div id="toolboxtree" style="padding: 10px;line-height: 25px;"></div>';
     document.body.append(dv);
-    document.getElementById("toolboxclosebtn").addEventListener("click",function (ev) {this.parentNode.style.display="none";  });
+    document.getElementById("toolboxclosebtn").addEventListener("click",function (ev) {this.parentNode.parentNode.style.display="none";  },false);
     var treedom=document.getElementById("toolboxtree");
+    treedom.addEventListener("mousedown",function (ev) {
+        ev=ev||window.event; //IE8以下事件对象是window.event
+        ev.cancelBubble=true;
+    },false);
     for (var p in window){
         var obj=window[p];
 
-        if(p=="esvm"){
-          
+        if(obj instanceof ESVM){
+
            var options=obj.options;
-           toolboxbianliobj(options,window,treedom);
+           toolboxbianliobj(options,window,treedom,0);
 
         }
 
