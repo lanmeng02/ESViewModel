@@ -1,4 +1,33 @@
+//v3重新构建支持低版本浏览器 增加兼容性
+
 //methods
+var _es_zhichiquerySelectorAll=document.querySelectorAll?true:false;
+
+function _es_querySelectorAll(obj,selector) {
+    if(_es_zhichiquerySelectorAll){
+        return obj.querySelectorAll(selector);
+    }
+    else{
+        var sx=selector.replace("[","").replace("]","");
+        var shuzu=new Array();
+        var els=obj.getElementsByTagName("*");
+        for(var i=0;i<els.length;i++){
+            var node=els[i];
+            var val = node.getAttribute(sx);
+
+            if(typeof (val)!="undefined"&&val!=null){
+               shuzu.push(node);
+
+            }
+        }
+
+        return shuzu;
+    }
+}
+
+
+
+
 String.prototype.endWith=function(s){
     if(s==null||s==""||this.length==0||s.length>this.length)
         return false;
@@ -19,50 +48,39 @@ String.prototype.startWith=function(s){
     return true;
 }
 String.prototype.trimStart = function (c) {
-
-    if (c == null || c == "") {
-        var str = this.replace(/^s*/, "");
-        return str;
+    var ks = -1;
+    for (var i = 0; i < this.length; i++) {
+        if (this.charAt(i) == c) {
+            ks = i;
+        }
+        else {
+            break;
+        }
+    }
+    if (ks != -1) {
+        return this.substr(ks, this.length-ks-1);
     }
     else {
-
-        var str = this;
-        var ps=-1;
-
-        for(var i=0;i<str.length;i++){
-
-            if(str.charAt(i)==c){
-                ps=i;
-            }
-            else{
-                break;
-            }
-        }
-        if(ps>=0){
-            return str.substr(ps+1,str.length-ps-1);
-        }
-        else{
-            return str;
-        }
-
+        return this;
     }
 }
 
 //去除字符串尾部空格或指定字符
 String.prototype.trimEnd = function (c) {
-    if (c == null || c == "") {
-        var str = this;
-        var rg = /s/;
-        var i = str.length;
-        while (rg.test(str.charAt(--i)));
-        return str.slice(0, i + 1);
+    var js = 0;
+    for (var i = this.length - 1; i >= 0; i--) {
+        if (this.charAt(i) == c) {
+            js = i;
+        }
+        else {
+            break;
+        }
+    }
+    if (js != 0) {
+        return this.substr(0, js);
     }
     else {
-        var str = this;
-        var rg = new RegExp(c);
-        var i = str.length;
-        while (rg.test(str.charAt(--i)));
-        return str.slice(0, i + 1);
+        return this;
     }
 }
 String.prototype.replaceAll = function(s1, s2) {
@@ -86,39 +104,38 @@ function _es_replaceAll(source,s1,s2) {
  function _es_isnumber(val) {
     return !isNaN(val);
 }
-
+function _es_getbianliang(codestr) {
+    
+    var reg = /(?:\()\w+(?:\))/g;
+   return codestr.match(reg); 
+}
 function _es_getvar(codestr) {
+    var kschar="_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$.";
+    var jschar="=*+-/%)({}<>''\"\" ";
    var code=codestr;
-    code=code.replace(/\"\S*\"/g, "");
-    code=code.replace(/\'\S*\'/g, "");
-
-    var yusuanfu="=+-*/%(){} <>\"'";
     var arr=new Array();
     var bl="";
-    for (var i=0;i<code.length;i++){
-        if(yusuanfu.indexOf(code[i])==-1){
-            bl+=code[i];
-        }
-        else {
-            if(bl!="")
-            {
-                if(!_es_isnumber(bl[0])) {
+    var ks=false;
+   for(var i=0;i<code.length;i++){
+       var c=String(code.charAt(i));
 
-                    arr.push(bl);
-                }
-            }
-            bl="";
-        }
-    }
-    if(bl!="")
-    {
+       if(!ks&&kschar.indexOf(c)>-1){
+           bl="";
+           ks=true;
+       }
+       else if(ks&&jschar.indexOf(c)>-1){
+           arr.push(bl);
+           bl="";
+           ks=false;
+       }
+       if(ks){
+           bl+=c;
+       }
 
-        if(!_es_isnumber(bl[0])) {
-
-            arr.push(bl);
-        }
-
-    }
+   }
+   if(bl!=""&&ks){
+       arr.push(bl);
+   }
 
     return arr;
 }
@@ -149,52 +166,7 @@ function  ESArrayToObjects(array) {
     }
     return obj;
 }
-if (!Object.prototype.watch) {
-    Object.defineProperty(Object.prototype, "watch", {
-        enumerable: false
-        , configurable: true
-        , writable: false
-        , value: function (prop, handler) {
-            var
-                oldval = this[prop]
-                , newval = oldval
-                , getter = function () {
-                    return newval;
-                }
-                ,dx=this
-                , setter = function (val) {
-                    oldval = newval;
-                    newval=val;
 
-                    return newval=handler.call(dx, prop, oldval, val);
-                }
-            ;
-
-            if (delete this[prop]) { // can't watch constants
-                Object.defineProperty(this, prop, {
-                    get: getter
-                    , set: setter
-                    , enumerable: true
-                    , configurable: true
-                });
-            }
-        }
-    });
-}
-
-// object.unwatch
-if (!Object.prototype.unwatch) {
-    Object.defineProperty(Object.prototype, "unwatch", {
-        enumerable: false
-        , configurable: true
-        , writable: false
-        , value: function (prop) {
-            var val = this[prop];
-            delete this[prop]; // remove accessors
-            this[prop] = val;
-        }
-    });
-}
 function  _es_ESOBJ(obj,name,fullname,vmnodes,venodes,vpnodes) {
     this.obj=obj;
     this.name=name;
@@ -202,63 +174,32 @@ function  _es_ESOBJ(obj,name,fullname,vmnodes,venodes,vpnodes) {
     this.nodes=vmnodes;
     this.venode=venodes;
     this.vpnodes=vpnodes;
-    this.changevalue=function (sx,value) {
+   /* this.changevalue=function (sx,value) {
         this[sx]=value;
-    }
+    }*/
 
 }
-var _es_objects=new ESArray();
-function  ESArray() {
-    this.objects=new Array();
-    this.add=function (dx,p,fullp) {
-        var lx=_es_typeof(dx);
 
-            if(fullp==""){
-                fullp=p;
-            }
-          //  this.objects.push({obj:dx,name:p,fullname:fullp,nodes:new Array(),venodes:new Array(),vpnodes:new Array()});
-           this.objects.push(new _es_ESOBJ(dx,p,fullp,new Array(),new Array(),new Array()))
-            if(lx=="array"){
-                for(var pp in dx){
-                    this.objects.push(new _es_ESOBJ(dx[pp],p,fullp+"["+pp+"]",new Array(),new Array(),new Array()))
-                   // this.objects.push({obj:dx[pp],name:p,fullname:fullp+"["+pp+"]",nodes:new Array(),venodes:new Array(),vpnodes:new Array()});
-                }
-            }
-
-
-
-    }
-    this.get=function (sy) {
-        return this.objects[sy];
-    }
-    this.findbyobj=function (dx) {
-        for (var i=0;i<this.objects.length;i++){
-            if(this.objects[i].obj==dx){
-                return this.objects[i];
-            }
-        }
-        return  null;
-    }
-    this.findbyfullname=function (fullname) {
-        for (var i=0;i<this.objects.length;i++){
-            if(this.objects[i].fullname==fullname){
-                return this.objects[i];
-            }
-        }
-        return  null;
-    }
-
-    this.setnodesvalue=function(esobj,value){
-        for (var p in esobj.nodes){
-            var node=esobj.nodes[p];
-
-            _es_setnodevalue(node,value);
-        }
-    }
-}
 function _es_vartypeof(obj) {
     var   gettype=Object.prototype.toString;
     return   gettype.call(obj).toLowerCase();
+}
+function  _es_addpesobj(options,pobj) {
+    for (var p in options){
+        var obj=options[p];
+        if(pobj==window){
+            obj=window[p];
+        }
+        var lx=_es_typeof(obj);
+
+            if (obj instanceof ESOBJ) {
+                obj["PESOBJ"] = options;
+            }
+            else{
+                _es_addpesobj(obj,options);
+            }
+
+    }
 }
 function _es_typeof(obj) {
     var lx=_es_vartypeof(obj);
@@ -299,13 +240,132 @@ function _es_eval(code){
 }
 
 //dom
+var addStyle = function (ele, str) {
+    str = str.trim().trimStart("{").trimEnd("}").trimEnd(";");
+    var curstylesobj = _es_getAttr(ele, "style");
+    
+    if (curstylesobj.valid || curstylesobj.value == null) {
+        var curstyles = "";
+        if (curstylesobj.value != null) {
+            //ie 6 ie7
+            if (_es_typeof(curstylesobj.value) == "object"){
+                curstylesobj.value = ele.style.cssText;
+             }
+            curstyles = curstylesobj.value.trim();
+        }
+        var sz_curstyles = [];
+        if (curstyles != "") {
+            sz_curstyles = curstyles.trimEnd(";").split(";");
+        }
+       
+        var add_styles = str.split(";");
+      
+     
+        for (var i = 0; i < add_styles.length; i++) {
+            var s = add_styles[i].trim();
+            if (s == "") {
+                continue;
+            }
+            var cssname = s.split(":")[0].toLowerCase();
+            var you = false;
+            for (var m = 0; m < sz_curstyles.length; m++) {
+                var ss = sz_curstyles[m].trim();
+                var cssnames = ss.split(":")[0].toLowerCase();
+                if (cssnames == cssname) {
+                    sz_curstyles[m] = ss.split(":")[0] + ":" + s.split(":")[1];
+                    you = true;
+                    break;
+                }
+            }
+            if (!you) {
+                sz_curstyles.push(s);
+            }
+
+        }
+        
+        ele.style.cssText = sz_curstyles.join(";") + ";";
+    }
+    
+}
+var deleteStyle = function (ele, str) {
+    str = str.trim().trimStart("{").trimEnd("}").trimEnd(";");
+    var curstylesobj = _es_getAttr(ele, "style");
+    if (curstylesobj.valid || curstylesobj.value == null) {
+        var curstyles = "";
+        if (curstylesobj.value != null) {
+            if (_es_typeof(curstylesobj.value) == "object"){
+                curstylesobj.value = ele.style.cssText;
+            }
+            curstyles = curstylesobj.value.trim();
+        }
+        var sz_curstyles = curstyles.trimEnd(";").split(";");
+        var add_styles = str.split(";");
+        var newsytles = [];
+
+
+
+        for (var i = 0; i < sz_curstyles.length; i++) {
+            var s =  sz_curstyles[i].trim();
+            if (s == "") {
+                continue;
+            }
+            var cssname = s.split(":")[0].toLowerCase();
+            var you = false;
+            for (var m = 0; m < add_styles.length; m++) {
+                var ss = add_styles[m].trim();
+                var cssnames = ss.split(":")[0].toLowerCase();
+                
+                if (cssnames == cssname) {
+                  
+                    you = true;
+                    break;
+                }
+                
+            }
+
+            if (!you) {
+
+             newsytles.push(s);
+            }
+        }
+       
+        ele.style.cssText = newsytles.join(";") + ";";
+    }
+}
+function _es_findnodepro(node,attr,fn) {
+  var jg=  _es_getAttr(node,attr);
+  if(jg.valid){
+      fn(node,attr,jg.value);
+  }
+}
 function  _es_setnodestyle(node,style) {
     
 }
-function  _es_addevent(node,sj,fn,obj) {
-    node.addEventListener(sj,function () {fn(this,obj);
+//兼容addEventListener函数
+var Event = {};
+Event.addEvents = function(target,eventType,handle){
+    if(document.addEventListener){
+        Event.addEvents = function(target,eventType,handle){
+            target.addEventListener(eventType,handle,false);
+        };
+    }else{
+        Event.addEvents = function(target,eventType,handle){
+            target.attachEvent('on'+eventType,function(){
+                handle.call(target,arguments);
+            });
+        };
+    };
+    Event.addEvents(target,eventType,handle);
+};
 
-    },false);
+
+function  _es_addevent(node,sj,fn,obj) {
+
+    Event.addEvents(node,sj,function () {fn(this,obj);
+
+    });
+
+
 }
 function  _es_htmltonode(innerhtml,tagname) {
     var node=document.createElement(tagname);
@@ -371,21 +431,12 @@ function _es_getnodesbypros(pros,pnodes){
     if(_es_typeof(pnodes)=="array"){
         for(var m=0;m<pnodes.length;m++) {
             for (var i = 0; i < cs.length; i++) {
-                var _nodes = pnodes[m].querySelectorAll(cs[i]);
 
+                 var _nodes=_es_querySelectorAll(pnodes[m],cs[i]);
                  for (var m = 0; m < _nodes.length; m++) {
                     var _n = _nodes[m];
                      _es_arrayadditme(nodes,_n);
-                   /* var you = false;
-                    for (var n = 0; n < nodes.length; n++) {
-                        if (nodes[n] == _n) {
-                            you = true;
-                            break;
-                        }
-                    }
-                    if (!you) {
-                        nodes.push(_n);
-                    }*/
+
 
                 }
 
@@ -396,21 +447,13 @@ function _es_getnodesbypros(pros,pnodes){
 
 
         for (var i = 0; i < cs.length; i++) {
-            var _nodes = pnodes.querySelectorAll(cs[i]);
+
+
+            var _nodes=_es_querySelectorAll(pnodes,cs[i]);
 
             for (var m = 0; m < _nodes.length; m++) {
                 var _n = _nodes[m];
                 _es_arrayadditme(nodes,_n);
-                /*var you = false;
-                for (var n = 0; n < nodes.length; n++) {
-                    if (nodes[n] == _n) {
-                        you = true;
-                        break;
-                    }
-                }
-                if (!you) {
-                    nodes.push(_n);
-                }*/
 
             }
 
@@ -434,10 +477,43 @@ function _es_getAttr(node,attr){
   }
     return jg;
 }
+function _es_setnodesvalue(nodes,value) {
+    var lx=_es_typeof(nodes);
+    if(lx=="array"){
+        for(var i=0;i<nodes.length;i++){
+            _es_setnodevalue(nodes[i],value);
+        }
+    }
+    else {
+        _es_setnodevalue(nodes,value);
+    }
+}
 function  _es_setnodevalue(node,value) {
+
     if(node!=null){
-        var vtype=_es_typeof(value);
-        if(vtype=="object"){
+
+          if(value instanceof ESOBJ){
+              value=value.val;
+          }
+            var vtype=_es_typeof(value);
+        if(vtype=="undefined"){
+            value="";
+        }
+        else if(vtype=="array"){
+            var str="";
+            for(var i=0;i<value.length;i++){
+                 var _obj=value[i];
+                 if(_obj instanceof ESOBJ) {
+
+                     if (str != "") {
+                         str += "、";
+                     }
+                     str +=_obj.val;
+                 }
+            }
+            value=str;
+        }
+        else if(vtype=="object"){
             var valuestr="";
             for(var p in value){
                 if(_es_typeof(value[p])=="function"){
@@ -450,8 +526,11 @@ function  _es_setnodevalue(node,value) {
             }
             value=valuestr;
         }
+
         var tagname=node.tagName.toLowerCase();
+
         if(tagname=="span"||tagname=="p"||tagname=="div"||tagname=="a"){
+
             node.innerText=value;
         }
         else  if(tagname=="input"){
@@ -533,397 +612,595 @@ function _es_debug(str,jibie) {
     }
     console.log(str);
 }
-function _es_arraytobojects(obj) {
 
-     for (var p in obj){
-         var _obj=obj[p];
-        var lx=_es_typeof(_obj);
-        if(lx=="array"){
-            var dx=new ESArrayToObjects(_obj);
-           obj[p]=dx;
-           dx["changevalue"]=function (sx,value) {
-               this[sx]=value;
-           }
-            Object.defineProperty(dx, "changevalue", {
-                enumerable: false
-            });
-        }
-        else if(lx=="object"){
-            _es_arraytobojects(_obj);
-        }
-     }
-
-}
-
-function _es_prevdodata(options,pobject,pname) {
-    if(arguments.length==1){
-        pobject=window;
-        pname="window";
-    }
-    else if(arguments.length==2){
-        pname="window";
-    }
-
-    var fname=pname;
-
-
-    for (var p in options){
-        var dx=options[p];
-        var lx=_es_typeof(dx);
-        if(lx=="array"){
-            dx=new ESArrayToObjects(dx);
-        }
-        if(lx=="object"){
-
-            if(pname=="") {
-                fname = p;
-
-            }
-            else{
-                if(_es_isnumber(p)){
-                    fname=pname+"["+p+"]";
-                }
-                else {
-                    fname=pname+"."+p;
-                }
-
-            }
-
-            _es_prevdodata(dx,dx,fname);
-
-
-        }
-        else if(pname!=""){
-            if(_es_isnumber(p)){
-                fname=pname+"["+p+"]";
-            }
-            else {
-                fname=pname+"."+p;
-            }
-        }
-        pobject[p] = dx;
-        if(lx!="function") {
-            _es_objects.add(dx,p,fname);
-            // _es_nodes.push({obj: dx, name: p, fullname: fname, nodes: new Array()});
-        }
-    }
-}
 //render
 
-function _es_render_vc(esnode,first) {
-    var attrobj = _es_getAttr(esnode.node, "vc");
-    if(attrobj.valid){
-        var incode=_es_incode(attrobj.value);
-        if(incode.valid) {
-            var fvar = incode.fvar;
-            var evalobj =_es_eval( incode.fobj);
-            if(evalobj.valid){
 
 
-                var _subnodes= _es_getchildnodes(esnode.node);
-                var _html=esnode.node.innerHTML;
+function _es_render_ve(node,first) {
+    if(arguments.length==1){
+        first=true;
+    }
+    var veobj=_es_getAttr(node,"ve");
+    if(veobj.valid){
 
-                if(evalobj.value) {
-                    var _obj=evalobj.value[0];
-                    for (var p in _obj) {
-                        _html = _html.replaceAll( "." + p, incode.fobj + "[@no]." + p);
-                    }
-                }
-               _es_removechildnodes(esnode.node);
+        var provalue=veobj.value;
+        var cs=provalue.split("^");
+        var sj=cs[0].toLowerCase();
+        var fn=cs[1];
+        if(sj=="click"){
 
+            _es_addevent(node,sj,function (dx,fnn) {
+                var ro=_es_eval(fnn);
 
-               for (var i in evalobj.value)
-               {
-                 var html=_html.replaceAll("@no",i);
-
-                 var mbnodes=_es_htmltonode(html,esnode.node.tagName);
-                   _subnodes= _es_getchildnodes(mbnodes);
-                   for(n in _subnodes){
-                       var _snode=_subnodes[n];
-                       esnode.node.appendChild(_snode);
-                   }
-               }
-            }
-
-        }
-
-        var tocode=_es_tocode(attrobj.value);
-        if(tocode.valid) {
-            var fvar =_es_eval( tocode.fvar);
-            var evalobj =_es_eval( tocode.fobj);
-
-            if(evalobj.valid){
-
-
-                var _subnodes= _es_getchildnodes(esnode.node);
-                var _html=esnode.node.innerHTML;
-                var len=evalobj.value.length;
-
-                _es_removechildnodes(esnode.node);
-
-
-                for (var i=fvar.value;i<evalobj.value;i++)
-                {
-
-                    var html=_html.replaceAll("@no",i);
-                    var mbnodes=_es_htmltonode(html,esnode.node.tagName);
-                    _subnodes= _es_getchildnodes(mbnodes);
-                    for(n in _subnodes){
-                        var _snode=_subnodes[n];
-                        esnode.node.appendChild(_snode);
-                    }
-                }
-            }
-
+            },fn)
         }
 
     }
 }
-
+ 
 //对象
 function ESNode(node) {
     this.node=node;
     this.clonenode=node.cloneNode(true);
 
 }
+function  ESOBJ(PESOBJ,name,fname,fu) {
+
+    this.val=null;
+    this.name=name;
+    this.fu=fu;
+    this._p=null;
+    this.fname=fname;
+    this.nodes=new Array();
+    this.fo=function () {
+        return this.fu[this.fname];
+    }
+    this.v=function (val) {
+        if(arguments.length==0){
+            return  this.val;
+        }
+      //  _es_debug(this.val+"->"+val);
+      var sublx=_es_typeof(val);
+      this.val= val;
+      //change
+        for(var i=0;i<this.nodes.length;i++){
+            var node=this.nodes[i];
+            fu._es_render_vm(node,false);
+            fu._es_render_vp(node, false);
+          
+        }
+        //pesobj
+        if(this["_pobj"]){
+            var pesobj=this["_pobj"];
+            if(_es_typeof(pesobj)=="array"){
+               var _allvalstr="";
+                for(var i=0;i<pesobj.length;i++){
+                    var _v=pesobj[i].val;
+                    if(_v!="") {
+                        if (_allvalstr != "") {
+                            _allvalstr += "、";
+                        }
+                        _allvalstr += _v;
+                    }
+                }
+
+                _es_setnodesvalue(pesobj.values.nodes,_allvalstr);
+
+            }
+        }
+       return this;
+    }
+    this.addNode=function (node) {
+        var you=false;
+       for (var i=0;i<this.nodes.length;i++){
+           if(this.nodes[i]==node){
+               you=true;
+               break;
+           }
+       }
+       if(!you){
+           this.nodes.push(node);
+       }
+       return node;
+    }
+
+    this.toString=function () {
+        return this.val;
+    }
+}
+
+function _es_zhuanESOBJ(obj,pobj,name,fullname) {
+    var slx=_es_typeof(obj);
+    var isjb=false;
+    if(slx=="string"){
+        obj=new String(obj);
+        obj["nodes"]=new Array();
+        isjb=true;
+    }
+    else if(slx=="boolean"){
+        obj=new Boolean(obj);
+        obj["nodes"]=new Array();
+        isjb=true;
+    }
+    else if(slx=="number"){
+        obj=new Number(obj);
+        obj["nodes"]=new Array();
+        isjb=true;
+    }
+    if(isjb){
+        obj["_pobj"]=pobj;
+        obj["_name"]=name;
+        obj["_fname"]=fullname;
+    }
+    return obj;
+}
+function  _es_objaddfn(obj,esvmobj) {
+    obj["v"]=function (v) {
+        var _lx=_es_typeof(this);
+        var _name=this._name;
+        var _nodes=this.nodes;
+        var _pobj=this._pobj;
+        var _fname=this._fname;
+        var newobj=this;
+        var isjb=false;
+        if(_lx=="string"){
+            newobj=new String(v);
+            isjb=true;
+        }
+        else if(_lx=="number"){
+            newobj=new Number(v);
+            isjb=true;
+        }
+        else if(_lx=="boolean"){
+            newobj=new Boolean(v);
+            isjb=true;
+        }
+        if(isjb){
+            newobj["nodes"]=_nodes;
+            newobj["_pobj"]=_pobj;
+            newobj["_name"]=_name;
+            newobj["_fname"]=_fname;
+            _es_objaddfn(newobj,esvmobj);
+            _pobj[_name]=newobj;
+            esvmobj["_es_datas"][_fname]=newobj;
+        }
+
+        return newobj;
+    }
+}
+function _es_toESOBJ(options,pobj,fullname,fu){
+
+   var lx=_es_typeof(options);
+   if(lx=="object"||lx=="array"){
+      for(var p in options){
+          var obj=options[p];
+
+          var slx=_es_typeof(obj);
+
+          if(slx!="function") {
+              var  _fname=p;
+              if(fullname!=""){
+                  if(lx=="array"){
+                      _fname=fullname+"["+p+"]";
+                  }
+                  else{
+                      _fname=fullname+"."+p;
+                  }
+
+              }
+
+              if(slx=="object"||slx=="array"){
+                  _es_toESOBJ(obj,obj,_fname,fu);
+                  var esobj=new ESOBJ(obj,p,_fname,fu);
+                  esobj.v(obj);
+                  esobj._p=options;
+                  pobj[p]=obj;
+                  fu["_es_datas"][_fname]=esobj;
+              }
+              else{
+                  var esobj=new ESOBJ(obj,p,_fname,fu);
+                  esobj.v(obj);
+                  esobj._p=options;
+                  options[p]=esobj;
+                  pobj[p]=esobj;
+                  fu["_es_datas"][_fname]=esobj;
+              }
+
+
+
+
+          }
+        
+          options["nodes"]=new Array();
+          options["addNode"]=function(node){
+              this["nodes"].push(node);
+          }
+   }
+
+   }
+  return options;
+}
+function _es_toString(obj) {
+    var str="";
+    var lx=_es_typeof(obj);
+    if(lx=="function"){
+
+    }
+    else if(lx=="object"||lx=="array"){
+       for(var p in obj){
+           var subojb=obj[p];
+           if(subojb instanceof ESOBJ) {
+
+
+                  if(subojb.val!=""){
+                      if(str!=""){
+                          str+="、"
+                      }
+                      str += subojb.val;
+                  }
+
+
+           }
+       }
+    }
+    else{
+        str=obj.toString();
+    }
+    return str;
+}
 function ESVM(options) {
-    _es_arraytobojects(options);
-  this.options=options;
-  this._init=function () {
+    this._es_datas=new Array();
+   _es_toESOBJ(options,this,"",this);
 
+   var dx=this;
+   this._es_eval=function (code) {
+       var obj={valid:false,value:null};
+       try {
 
-  }
-  
-  this._es_render_vm=function (node,first) {
-      var vmpobj=_es_getAttr(node,"vm");
-      if(vmpobj.valid){
-          var pv=_es_eval(vmpobj.value);
-
-          if(pv.valid){
-
-              //变化
-              if(node.tagName=="INPUT"){
-
-
-                  _es_addevent(node,"change",function (obj,pvv) {
-                      var _value=obj.value;
-                      var _typenode=_es_getAttr(obj,"type");
-
-                      if(_typenode.value=="radio"||_typenode.value=="checkbox"){
-                         if(!node.checked){
-                             _value="";
-                         }
-                      }
-                      var provm=_es_getAttr(obj,"vm");
-                      if(provm.valid){
-                          var __esobject=_es_objects.findbyfullname(provm.value);
-                          if(__esobject){
-                              __esobject.obj=_value;
-                          }
-                      }
-                      _es_evalsetvalue(pvv,_value);
-
-                  },vmpobj.value);
+               //not ie
+              var jg=null;
+              with (dx) {
+                 jg=eval(code);
               }
-              var zhi=vmpobj.value;
+               obj.value= jg;
+               obj.valid=true;
 
-            /*  if(zhi.endWith("]")){
-                  var ps=zhi.lastIndexOf("[");
-                  if(ps>-1) {
-                      zhi = zhi.substr(0, ps);
-                  }
-              }*/
-              var _esobject=_es_objects.findbyfullname(zhi);
-              if(_esobject&&first){
-                  _es_arrayadditme(_esobject.nodes,node);
-                 // _esobject.nodes.push(node);
-              }
-              _es_setnodevalue(node,pv.value);
-              var _esobject=_es_objects.findbyfullname(vmpobj.value);
-              if(_esobject&&first){
-                  _es_arrayadditme(_esobject.nodes,node);
-                  //_esobject.nodes.push(node);
-              }
-          }
+       }
+       catch (e) {
 
-      }
-  }
-  this._es_render_ve=function (node,first) {
-      if(arguments.length==1){
-          first=true;
-      }
-      var veobj=_es_getAttr(node,"ve");
-      if(veobj.valid){
+           obj.value=e;
+       }
+       return  obj;
+   }
 
-          var provalue=veobj.value;
-          var cs=provalue.split("^");
-          var sj=cs[0].toLowerCase();
-          var fn=cs[1];
-          if(sj=="click"){
+   this.fo=function (fullname) {
+       return this._es_datas[fullname];
+   }
+   this._es_render_vc=function(esnode,first) {
+        var attrobj = _es_getAttr(esnode.node, "vc");
 
-              _es_addevent(node,sj,function (dx,fnn) {
-                  var ro=_es_eval(fnn);
+        if(attrobj.valid){
+            var provalue=attrobj.value.trim();
 
-              },fn)
-          }
+            var vals=_es_getvar(provalue);
 
-      }
-  }
-  this._es_render_vps=function(nodes,first){
+            //with
+            if(provalue.startWith("with ")&&vals.length==2){
 
-      for(var i=0;i<nodes.length;i++){
-          this._es_render_vp(nodes[i],first);
-      }
-  }
-  this._es_render_vp=function (node,first) {
-      if(arguments.length==1){
-          first=true;
-      }
-      var vpobj=_es_getAttr(node,"vp");
+                var jg=dx._es_eval(vals[1]);
 
-      if(vpobj.valid){
+                if(jg.valid){
+                    var provaluetype=_es_typeof(jg.value);
 
-          var provalue=vpobj.value;
-          var cs=provalue.split("^");
-          var proname=cs[0].toLowerCase();
-          var provalue=cs[1].trimStart("{").trimEnd("}");
+                    if(provaluetype=="object"){
+                        var _nodes=_es_getnodesbypros("[vm]|[ve]|[vp]",esnode.node);
 
-          if(cs.length==3){
-              var proobj=_es_eval(cs[2]);
-              var bls=_es_getvar(cs[2]);
-              for (var i=0;i<bls.length;i++){
-                  var fullname=bls[i];
+                        for(var i=0;i<_nodes.length;i++){
+                            var _node=_nodes[i];
 
-                 var _esobj= _es_objects.findbyfullname(fullname);
-                  if(_esobj&&first){
-                       _es_arrayadditme(_esobj.vpnodes,node);
+                            _es_findnodepro(_node,"vm",function (node,attr,val) {
+                                var _vals=_es_getvar(val);
+                                for(var m=0;m<_vals.length;m++){
+                                    var _val=_vals[m];
+                                    if(_val.startWith(".")){
+                                        val=val.replaceAll(_val,vals[1]+_val);
+                                    }
 
-                     // _esobj.nodes.push(node);
-                  }
-              }
-            if(proobj.valid&&proobj.value) {
+                                }
 
-                if (proname == "style") {
-                    node.style = node.style.cssText + provalue;
+                                _es_setAttr(node,attr,val,true);
+                            });
+                        }
+                    }
+                    return;
+                }
 
+            }
+            var jg=dx._es_eval(provalue);
+            if(jg.valid){
+                var provaluetype=_es_typeof(jg.value);
+                for (var i=0;i<vals.length;i++){
+                    var _var=dx._es_eval(vals[i]);
+                    if(_var.valid){
+                        _var.value.addNode(esnode);
+                    }
+                }
+
+                if(provaluetype=="boolean"){
+                    if(jg.value){
+                        addStyle(esnode.node,"display:inherit;");
+
+                    }
+                    else{
+                        addStyle(esnode.node,"display:none;");
+                    }
+                }
+                return;
+            }
+
+            var incode=_es_incode(attrobj.value);
+            if(incode.valid) {
+                var fvar = incode.fvar;
+                var evalobj =dx._es_eval( incode.fobj);
+
+                if(evalobj.valid){
+
+
+                    var _subnodes= _es_getchildnodes(esnode.node);
+                    var _html=esnode.node.innerHTML;
+
+                    if(evalobj.value) {
+                        var _obj=evalobj.value[0];
+                        for (var p in _obj) {
+                            _html = _html.replaceAll( "." + p, incode.fobj + "[@no]." + p);
+                        }
+
+                    }
+                    _es_removechildnodes(esnode.node);
+
+
+                    for (var i=0;i< evalobj.value.length;i++)
+                    {
+                        var html=_html.replaceAll("@no",i);
+
+                        var mbnodes=_es_htmltonode(html,esnode.node.tagName);
+                        _subnodes= _es_getchildnodes(mbnodes);
+                        for(n in _subnodes){
+                            var _snode=_subnodes[n];
+                            esnode.node.appendChild(_snode);
+                        }
+                    }
+                }
+
+            }
+
+            var tocode=_es_tocode(attrobj.value);
+            if(tocode.valid) {
+                var fvar =dx._es_eval( tocode.fvar);
+                var evalobj =dx._es_eval( tocode.fobj);
+
+                if(evalobj.valid){
+
+
+                    var _subnodes= _es_getchildnodes(esnode.node);
+                    var _html=esnode.node.innerHTML;
+                    var len=evalobj.value.length;
+
+                    _es_removechildnodes(esnode.node);
+
+
+                    for (var i=fvar.value;i<evalobj.value;i++)
+                    {
+
+                        var html=_html.replaceAll("@no",i);
+                        var mbnodes=_es_htmltonode(html,esnode.node.tagName);
+                        _subnodes= _es_getchildnodes(mbnodes);
+                        for(n in _subnodes){
+                            var _snode=_subnodes[n];
+                            esnode.node.appendChild(_snode);
+                        }
+                    }
+                }
+
+            }
+
+        }
+    }
+
+    this._es_render_vm=function(node,first) {
+        var vmpobj=_es_getAttr(node,"vm");
+
+        if(vmpobj.valid){
+
+            var probj=dx.fo(vmpobj.value);
+
+            var pv=dx._es_eval(vmpobj.value);
+
+            if(pv.valid){
+           if(first){
+               
+                   var objlx=_es_typeof(pv.value);
+                    
+                   pv.value.addNode(node);
+               
+           }
+
+                //变化
+                if(node.tagName=="INPUT"){
+
+
+                    _es_addevent(node,"change",function (obj,pvv) {
+                        var _value=obj.value;
+                        var _typenode=_es_getAttr(obj,"type");
+
+                        if(_typenode.value=="radio"||_typenode.value=="checkbox"){
+                            if(!node.checked){
+                                _value="";
+                            }
+                        }
+                        var provm=_es_getAttr(obj,"vm");
+                        if(provm.valid){
+
+                            var jg=dx._es_eval(provm.value);
+                            jg.value.v(_value);
+                            var fulx=_es_typeof(jg.value._p);
+                            if(fulx=="array"){
+
+                                var zhistr=_es_toString(jg.value._p);
+                                var _nodes=jg.value._p["nodes"];
+
+                                for(var i=0;i<_nodes.length;i++){
+
+                                    _es_setnodevalue(_nodes[i], zhistr);
+                                }
+                            }
+
+
+                            var _nodes=jg.value.nodes;
+                            for(var i=0;i<_nodes.length;i++){
+                                dx._es_render_vp(_nodes[i],false);
+                            }
+                        }
+
+
+                    },vmpobj.value);
+
+
+                }
+
+
+                if(probj) {
+
+                    _es_setnodevalue(node, probj.toString());
+                }
+
+
+            }
+
+        }
+    }
+    this._es_render_ve=function(node, first) {
+        if (arguments.length == 1) {
+            first = true;
+        }
+        var veobj = _es_getAttr(node, "ve");
+        if (veobj.valid) {
+
+            var provalue = veobj.value;
+            var cs = provalue.split("^");
+            var sj = cs[0].toLowerCase();
+            var fn = cs[1];
+            if (sj == "click") {
+
+                _es_addevent(node, sj, function (dx, fnn) {
+                    var ro = _es_eval(fnn);
+
+                }, fn)
+            }
+
+        }
+    }
+    this._es_render_vp=function(node,first) {
+        if(arguments.length==1){
+            first=true;
+        }
+        var vpobj=_es_getAttr(node,"vp");
+       
+        if(vpobj.valid){
+
+            var provalue=vpobj.value;
+            var cs=provalue.split("^");
+            var proname=cs[0].toLowerCase();
+            var provalue = cs[1].trimStart("{").trimEnd("}");
+            var bianliangs = _es_getbianliang(provalue);
+            if (bianliangs != null) {
+                for (var i = 0; i < bianliangs.length; i++) {
+                    var bl = bianliangs[i].trimStart("(").trimEnd(")");
+                    var bls = _es_getvar(bl);
+                    for (var p in bls) {
+                        var _pobj = dx._es_eval(bls[p]);
+                        if (_pobj.valid) {
+                            var _var = _pobj.value;
+                            _var.addNode(node);
+                            provalue = provalue.replaceAll("\\(" + bls[p] + "\\)", _var.val);
+                          
+                            
+                        }
+                       
+                    }
+                    
+                }
+            }
+            
+            if(cs.length==3){
+                var proobj = dx._es_eval(cs[2]);
+                
+                var bls=_es_getvar(cs[2]);
+                for (var i=0;i<bls.length;i++){
+                    var fullname=bls[i];
+                    var _pobj=dx._es_eval(fullname);
+                    if(_pobj.valid){
+                        _pobj.value.addNode(node);
+                    }
+
+
+                }
+               
+                if(proobj.valid&&proobj.value) {
+                  
+                    if (proname == "style") {
+
+                      
+                        addStyle(node,provalue);
+
+                    }
+                    else {
+                        _es_setAttr(node,proname,provalue,false);
+                    }
+                }
+                else{
+                    if (proname == "style") {
+                        
+                       
+                        deleteStyle(node, provalue);
+
+                    }
+                    
+                   
+                }
+            }
+            else {
+               
+                if(proname=="style"){
+
+                    addStyle(node,provalue);
                 }
                 else {
                     _es_setAttr(node,proname,provalue,false);
                 }
             }
-            else{
-
-                node.style = node.style.cssText.replace(provalue,"");
-
-            }
-          }
-          else{
-              if(proname=="style"){
-                  node.style= node.style.cssText+provalue;
-
-              }
-              else {
-                  _es_setAttr(node,proname,provalue,false);
-              }
-          }
-
-      }
-  }
-  this._es_render=function(){
-   var vc_nodes=_es_getnodesbypros("[vc]",document);
-   for(i in vc_nodes){
-       var esnode=new ESNode(vc_nodes[i]);
-       _es_render_vc(esnode,true);
-   }
-   var vmep_nodes=_es_getnodesbypros("[vm]|[ve]|[vp]",document);
-   for(i in vmep_nodes){
-       var node=vmep_nodes[i];
-       this._es_render_vm(node,true);
-       this._es_render_ve(node,true);
-       this._es_render_vp(node,true);
-   }
-  }
-    this._es_objwatch=function(objv,pobject){
-
-        var dx=this;
-        for(var p in objv) {
-
-            var obj=pobject;
-            var subobj=pobject[p];
-
-            var lx = _es_typeof(subobj);
-
-            if(lx=="string"||lx=="number"||lx=="boolean"){
-
-                obj.watch(p, function (id, oldval, newval) {
-
-                    if(oldval!=newval) {
-
-                        var _lx = _es_typeof (this);
-
-                        var _zhilx=_es_typeof(this[id]);
-                        var _esobj=null;
-                        if(this==window){
-                            _esobj=_es_objects.findbyfullname(id);
-                        }
-
-                        else{
-                            _esobj=_es_objects.findbyobj(this);
-                        }
-                        if(_lx=="object"&&_esobj){
-                            if(_es_isnumber(id)){
-                             var  _pesobj=   _es_objects.findbyfullname(_esobj.fullname);
-                                if(_pesobj){
-                                    dx._es_render_vps(_pesobj.nodes,false);
-                                    for (var i=0;i<_pesobj.nodes.length;i++){
-                                        var node=_pesobj.nodes[i];
-                                        _pesobj.obj.changevalue(id,newval);
-                                       // _es_render_vmvevps(node,false);
-                                         _es_setnodevalue(node,_pesobj.obj);
-                                    }
-                                }
-                                _esobj=_es_objects.findbyfullname(_esobj.fullname+"["+id+"]");
-                            }
-                            else{
-                                _esobj=_es_objects.findbyfullname(_esobj.fullname+"."+id);
-                            }
-
-
-                        }
-
-
-
-
-
-
-                        if(_esobj){
-                            dx._es_render_vps(_esobj.nodes,false);
-                            for (var i=0;i<_esobj.nodes.length;i++){
-                                var node=_esobj.nodes[i];
-                                //_es_render_vmvevps(node,false);
-                               _es_setnodevalue(node,newval);
-                            }
-
-                            for (var i=0;i<_esobj.vpnodes.length;i++){
-                                var node=_esobj.vpnodes[i];
-                                dx._es_render_vp(node,false);
-                            }
-                        }
-
-
-                    }
-                    return newval;
-                })
-            }
-
-            else{
-                this._es_objwatch(subobj,subobj);
-            }
-
 
         }
     }
-    _es_prevdodata(options,window,"");
-    this._es_render();
-    this._es_objwatch(options,window);
+
+   //添加
+   // _es_addpesobj(options,window);
+   var vcnodes=_es_getnodesbypros("[vc]",document);
+   for(var i=0;i<vcnodes.length;i++){
+       var vcnode=vcnodes[i];
+       var esnode=new ESNode(vcnode);
+       dx._es_render_vc(esnode,true);
+   }
+
+     var vmep_nodes=_es_getnodesbypros("[vm]|[ve]|[vp]",document);
+
+    for(i in vmep_nodes){
+        var node=vmep_nodes[i];
+
+        dx._es_render_vm(node,true);
+        dx._es_render_ve(node,true);
+        dx._es_render_vp(node,true);
+    }
 }
+
