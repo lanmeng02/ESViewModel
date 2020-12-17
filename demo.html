@@ -1,3 +1,4 @@
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -5,39 +6,53 @@
     <script src="tool.js"></script>
 </head>
 <body>
-<div id="app" >
+    <form autocomplete="off">
+        <div><input type="text" vm="users.name" name="uname"></div>
+        <span id="cs" vm="users.name" ve="click^show('ddd','fsfsdf')" vp="style^display:none;width:40px;^(users.name=='qxp')">系统参数</span>
+        <div id="app" style="display: none;">
+            <div><input type="checkbox" vm="users.books[0]" name="books" value="教育">教育<input type="checkbox" vm="users.books[1]" name="books" value="科技">科技</div>
+            爱好：<div vm="users.books"></div>
+            姓名：<div vm="users.name"></div>
+            <div vc="with users"><span vm=".name">name</span><span vm=".age">age</span></div>
 
-    <div><input type="checkbox" vm="users.books[0]" name="books" value="教育">教育<input type="checkbox" vm="users.books[1]" name="books" value="科技">科技</div>
-    爱好：<div vm="users.books"></div>
-    <div style="display: none1;">
+            <div><input type="radio" vm="users.sex" name="sex" value="男">男<input type="radio" vm="users.sex" name="sex" value="女">女</div>
+            性别：<div vm="users.sex"></div>
 
-        <div><input type="text" vm="users.name" name="uname"></div> 姓名：<div vm="users.name"></div>
-
-        <span vm="name" ve="click^show('ddd','fsfsdf')" vp="style^{display: none;}^(users.name=='qxp')">系统参数</span>
-
-        <div><input type="radio" vm="users.sex" name="sex" value="男">男<input type="radio" vm="users.sex" name="sex" value="女">女</div>
-      性别：<div vm="users.sex"></div>
-        <div vm="users.age" ve="click^show('ddd','fsfsdf')" >数字</div>
-
-
+            <div><span vc="sex=='nan'">M</span><span vc="sex=='nv'">F</span></div>
 
 
+            <div style="position:absolute;bottom:0;height:20px;width:100px;background-color:#ccc;" v3p="style^height:(chanliang)px;">产量0</div>
 
-      <ul  vc="in news ">
-          <li vp="style^{display: none;}^(.time>'2020-10-01')">
-              <span vm=".title" ve="click^show(.title,.nid)">新闻标题@no</span> <span vm=".time">时间</span>
-          </li>
-      </ul>
-    </div>
 
-</div>
 
+            <div style="display: none1;">
+
+
+
+
+
+                <div vm="users.age" ve="click^show('ddd','fsfsdf')">数字</div>
+
+
+                <ul vc="in news">
+                    <li vp="style^display: none;^(.time>'2020-10-01')">
+                        <span vm=".title" ve="click^show(.title,.nid)">新闻标题@no</span> <span vm=".time">时间</span>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </form>
 <script type="text/javascript">
+
+
     var  esvm=new ESVM({
-        els:"#app",
+         els:"#app",
+        sex: 'nan',
+        chanliang:100,
         name:"测试",
-        news:[{nid:"fsfdsfsf",title:"新闻测试1",url:"",time:'2019-10-01'},{nid:'dsfssfdfdsf',title:"新闻测试2",url:"",time:'2020-12-01'},{nid:'dddsfsfsdfs',title:"新闻测试3",url:"",time:'2011-11-01'}],
-        users:{name:"qxp55",age:30,sex:"男",books:["教育","科技"]},
+       news:[{nid:"fsfdsfsf",title:"新闻测试1",url:"",time:'2019-10-01'},{nid:'dsfssfdfdsf',title:"新闻测试2",url:"",time:'2020-12-01'},{nid:'dddsfsfsdfs',title:"新闻测试3",url:"",time:'2011-11-01'}],
+        users:{name:"test",age:30,sex:"男",books:["教育","科技"]},
         show:function (title,id) {
 
         }
@@ -45,7 +60,9 @@
 
     });
 
-   //  moveotoolbox();
+    //setInterval(function () { esvm.chanliang.v(Math.round(Math.random() * 200+30));  }, 1000);
+
+  
 </script>
 
 </body>
